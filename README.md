@@ -37,7 +37,19 @@ Implementation of the reward system.
 
 ## Rules
 (desbribe rules here)
+### Heroes acquisition
+When registering to the game, a player is given a random hero from the hero pool. New heroes may be purchased using gold.
+
+### Travel
+A player can move one of its hero on the map to join a battle for the land.
+
+### Battle
+When 6 heroes are located on the same map, a battle against the bots populating it is engaged. It ends when either all heroes or all bots hp's are equal to 0.
+ If bots are defeated, heroes are rewarded and one of the hero is given control of the map.
 
 ## Economy 
-(desbribe incentives here)
+
+### Deploy a map
+### Submit a new hero
+
 
