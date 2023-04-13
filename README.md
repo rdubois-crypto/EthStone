@@ -7,7 +7,7 @@ It is designed as an exercise for the Ledger's solidity guild.
 
 ## Design Philosophy
 As a decentralized game, the finality is to implement a game where:
-- soverignty :players own their asset heroes and conquered lands (maps)
+- sovereignty :players own their asset heroes and conquered lands (maps)
 - upgradability : 
 - dev community : developpers are encouraged to contribute to the project by being rewarded by the contract when submitting:
   - new heroes and maps (solidity devs)
