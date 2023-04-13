@@ -7,16 +7,37 @@ It is designed as an exercise for the Ledger's solidity guild.
 
 ## Design Philosophy
 As a decentralized game, the finality is to implement a game where:
-- players own their asset heroes and conquered lands (maps)
-- developpers are encouraged to contribute to the project by being rewarded by the contract when submitting:
+- soverignty :players own their asset heroes and conquered lands (maps)
+- upgradability : 
+- dev community : developpers are encouraged to contribute to the project by being rewarded by the contract when submitting:
   - new heroes and maps (solidity devs)
   - on top front environment
-- main contract shall be fully decentralized at some point, replacing the current admin by a voting system (destroying ownership when implemented)
-- cheat is prevented by design
+- decentralization : main contract shall be fully decentralized at some point, replacing the current admin by a voting system (destroying ownership when implemented)
+- security : cheat shall be prevented by design
+
 
 
 ## Components
 
 ### EthStone_main.sol
+This contract ensures the consistency of the whole game by enforcing the legality of heroes and map ownership and moves. 
+
+### EthStone_map.sol
+A EthStone_map contract is deployed for each tile of the map. It represents a land, owned by one of the player, protected by bots from the conquest of another team of players. 
+
+### EthStone_player.sol
+A EthStone_player contract is deployed for each player. It contains the list of assets (xp, gold, heroes) owned by the player and their current status.
+
+
+### EthStone_heroes.sol
+A EthStone_hero contract is deployed when a developper submit a new hero with its own rules.
+
+### EthStone_reward.sol
+Implementation of the reward system.
 
 ## Rules
+(desbribe rules here)
+
+## Economy 
+(desbribe incentives here)
+
