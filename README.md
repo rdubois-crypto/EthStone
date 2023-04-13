@@ -1,6 +1,6 @@
 ![ethstone2](https://user-images.githubusercontent.com/103030189/231741393-48dc0700-47c5-4b6b-840a-2eceb3ce2271.jpg)
 # EthStone
-A decentralized Rogue-like game
+A decentralized Rogue-like game PoC.
 
 This project aims to implement a rogue-like game where a player owns heroes and fight for the control of maps with other players.
 It is designed as an exercise for the Ledger's solidity guild. 
