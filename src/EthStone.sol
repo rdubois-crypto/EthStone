@@ -6,7 +6,12 @@ pragma solidity ^0.8.18;
 /* Library with common stuff*/
 /************************************************************************************************************/
 
+//a library to store all constant and macros
 library EthStone{
+ uint constant _NB_HERO=6;//max number of heroes on the map
+ uint constant _NB_BOTS=6;//max number of bots on the map
+ uint constant _ACTION_SLOT=3;
+
  uint8 constant _HUMAN=0;
  uint8 constant _ELF=1;
  uint8 constant _DWARF=2;
@@ -17,17 +22,75 @@ library EthStone{
  uint8 constant _ELEMENTAL=5;
  uint8 constant _MURLOC=6;
  uint8 constant _CELESTIAL=7;
- uint8 constant _FDP=666;
+ uint8 constant _FDP=66;
+
+
+ uint constant _MASK4=0xf;
+ uint constant _MASK8=0xff;
+ uint constant _MASK256=0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+ 
+
+/* hero status mapping */
+/* A hero status is encoded over 256 bits*/   
+ uint constant _RACE=0; //race is stored bits b0 to b3
+ uint constant _ATTACK=4;//attack value is stored b4 o b12
+ uint constant _HP=12; //hp are stored bits b12 to b19
+ 
+ uint constant _COOLDOWN1=20;
+ uint constant _COOLDOWN2=24;
+ uint constant _COOLDOWN3=28;
+ 
+ uint constant _ACTION1_XP=32;
+ uint constant _ACTION2_XP=36;
+ uint constant _ACTION3_XP=40;
+ uint constant _STUFF1_XP=44;
+ uint constant _STUFF2_XP=48;
+ uint constant _STUFF3_XP=52;
+ 
+ uint constant _BONUS_SPEED=56;
+ uint constant _BONUS_BLEED=60;
+ 
+ uint constant _BONUS_DARK=64;
+ uint constant _BONUS_LIGHT=68;
+ uint constant _BONUS_ARCANE=72;
+ uint constant _BONUS_FELL=76;
+ uint constant _BONUS_EARTH=80;
+ uint constant _BONUS_WIND=88;
+ uint constant _BONUS_WATER=92;
+ uint constant _BONUS_FIRE=96;
+ 
+ uint constant _FREESTART=100;
+ uint constant _FLAGS=192;//64 bits of flag
+ 
+/* team status mapping */
+ uint constant _TAUNT=0; //position of taunting players, 12 bits
+ 
+ function _SET4(uint256 status, uint256 slot, uint256 value) public returns(uint256 res)
+ {
+  res=(status &  (_MASK256^(_MASK4 << slot)))^((value&_MASK4)<<slot);
+ }
+ 
+ function _SET8(uint256 status, uint256 slot, uint256 value) public returns(uint256 res)
+ {
+  res=(status &  (_MASK256^(_MASK8 << slot)))^((value&_MASK8)<<slot);
+ }
+ 
+ 
+ function health_up(uint256 status, uint8 value) public returns(uint256)
+ {
+   return 0;
+ }
  
 }
 /************************************************************************************************************/
 /* player contract*/
 /************************************************************************************************************/
-contract PlayerContract{
- address public owner;
+contract EthStone_Player{
+ address public owner; //ownership of the asset
  address EthStone_main_addr;
- address[] collection;//the heroes in the player collection
- address[] hero_levels;//the level of each hero
+ 
+ address[] public collection;//the heroes in the player collection
+ uint256[] public hero_status;//the map entering status of each hero
  uint32[] xp; //xp of each heroes
  uint32 gold;
  uint256 account_number;
@@ -37,7 +100,17 @@ contract PlayerContract{
   EthStone_main_addr=i_EthStone_main_addr;
   account_number=account;
   collection.push(firsthero);
+  EthStone_Hero hero=EthStone_Hero(firsthero);
+  
+  uint256 status=0;
+  
+  EthStone._SET4(status, EthStone._RACE,   hero.race());
+  EthStone._SET8(status, EthStone._HP,   hero.base_hp());
+  EthStone._SET8(status, EthStone._ATTACK,   hero.base_attack());
+  
+
   owner=player;
+  hero_status.push(status);
  }
  
  function cheat(address force_hero) public returns(bool)
@@ -83,7 +156,7 @@ contract PlayerContract{
 /************************************************************************************************************/
 /* hero contract*/
 /************************************************************************************************************/
-contract HeroContract{
+contract EthStone_Hero{
  enum Character_class{ MAGE, WARRIOR, CLERIC }
  address owner;
  uint8 level;
@@ -91,7 +164,7 @@ contract HeroContract{
  string name;
  uint8 public base_attack;
  uint8 public base_hp;
- uint8 race;
+ uint8 public race;
  //0: humain, 1:orc, 2:elf, 3: nightelf, 
   
  function get_hero_name() public returns (string memory ret)
@@ -118,32 +191,35 @@ contract HeroContract{
   return true;
  }
  
- function  Action1( uint256 target_status, uint256 target) public pure virtual returns  (uint256)
+ function  Action1( uint256[14] memory status, uint256 target) public pure virtual returns  (uint256)
  {
   return 0; 
  }
  
- function Action2(  uint256 target_status,uint256 target) public  returns (uint256)
+ function Action2(  uint256[14] memory target_status,uint256 target) public  pure virtual returns  (uint256)
  { 
   return 0; 
  }
  
- function Action3(  uint256 target_status, uint256 target) public returns (uint256)
+ function Action3(  uint256[14] memory target_status, uint256 target) public pure virtual returns  (uint256)
  {
   return 0; 
  }
- 
+ function XP_spend(uint8 slot, uint256 amount) public pure virtual returns  (uint256)
+ {
+  return 0; 
+ }
 }
 
 
 /* list of heroes*/
-contract Cornelius is HeroContract{
+contract Cornelius is EthStone_Hero{
 
  Character_class public class=Character_class.CLERIC;
  string public pic='https://hearthstone.fandom.com/wiki/Mercenaries/Cornelius_Roame';
  uint8[3] public speed_actions=[8,2,2];
  
- constructor() HeroContract("Cornelius",3,13,EthStone._HUMAN) public {}
+ constructor() EthStone_Hero("Cornelius",3,13,EthStone._HUMAN) public {}
  function _action1(EthStone_Map Map, address Doer, address Taker) public{
  
  }
@@ -154,59 +230,59 @@ contract Cornelius is HeroContract{
 
 
 /* list of heroes*/
-contract Uther is HeroContract{
+contract Uther is EthStone_Hero{
 
  Character_class public class=Character_class.CLERIC;
  string public pic='https://hearthstone.fandom.com/wiki/Mercenaries/Cornelius_Roame';
  uint8[3] public speed_actions=[5,1,8];
-  constructor() HeroContract("Uther", 3,13, EthStone._HUMAN) public {}
+  constructor() EthStone_Hero("Uther", 3,13, EthStone._HUMAN) public {}
   
  function _action1(EthStone_Map Map, address Doer, address Taker) public{
  
  }
 }
 
-contract Illidan is HeroContract{
+contract Illidan is EthStone_Hero{
  
  Character_class public class=Character_class.WARRIOR;
-  constructor() HeroContract("Illidan",2,12,EthStone._NIGHTELF) public {}
+  constructor() EthStone_Hero("Illidan",2,12,EthStone._NIGHTELF) public {}
  string public pic='https://httpshearthstone.fandom.com/wiki/Mercenaries/Illidan_Stormrage?file=LETL_003H_02_MercCard0.png';
 }
 
-contract Arana is HeroContract{
+contract Arana is EthStone_Hero{
  
  Character_class public class=Character_class.MAGE;
  string public pic='https://hearthstone.fandom.com/wiki/Mercenaries/Aranna_Starseeker?file=BARL_021H_01_MercCard0.png';
-  constructor() HeroContract("Arana",2,12,EthStone._NIGHTELF) public {}
+  constructor() EthStone_Hero("Arana",2,12,EthStone._NIGHTELF) public {}
  function _action1(uint256 a) public returns(uint256 b){
   b=a+1;
  }
  
 }
 
-contract Antonidas is HeroContract{
+contract Antonidas is EthStone_Hero{
 
  Character_class public class=Character_class.MAGE;
-  constructor() HeroContract("Antonidas",3,13, EthStone._HUMAN) public {}
+  constructor() EthStone_Hero("Antonidas",3,13, EthStone._HUMAN) public {}
  string public pic='https://hearthstone.fandom.com/wiki/Mercenaries/Antonidas';
 }
 
 /* list of Monsters*/
-contract Murky is HeroContract{
+contract Murky is EthStone_Hero{
 
-  constructor() HeroContract("Murky",3,9, EthStone._MURLOC) public {}
+  constructor() EthStone_Hero("Murky",3,9, EthStone._MURLOC) public {}
  Character_class public class=Character_class.WARRIOR;
  string public pic='https://hearthstone.fandom.com/wiki/Mercenaries/Murky';
  }
 
-contract Niuzao is HeroContract{
- constructor() HeroContract("Niuzao",2,9, EthStone._CELESTIAL) public {}
+contract Niuzao is EthStone_Hero{
+ constructor() EthStone_Hero("Niuzao",2,9, EthStone._CELESTIAL) public {}
  string public pic='https://hearthstone.fandom.com/wiki/Mercenaries/Niuzao';
  }
 
-contract Cheater is HeroContract{
+contract Cheater is EthStone_Hero{
 
-  constructor() HeroContract("Cheater",255,255, EthStone._FDP) public {}
+  constructor() EthStone_Hero("Cheater",255,255, EthStone._FDP) public {}
  Character_class public class=Character_class.MAGE;
  string public pic='https://hearthstone.fandom.com/wiki/Old_God?file=Yogg-Saron_Dungeon_Companion.jpg';
 
@@ -239,9 +315,14 @@ contract EthStone_Map{
   address main;
   
   address[6] Players; //addresses of players 
+  
+  uint256[6] hero_statuses;
+  uint256[6] bots_statuses;
+  
+  
   uint256 public hero_slot=0;//tbd
   
-  address[6] Heroes;
+  address[6] public Heroes;
   address[6] public Monsters;
   bool[6] action_turn; //wait until all players have declared actions
   bool[12] alives; // flag of surviving characters
@@ -291,9 +372,19 @@ contract EthStone_Map{
     if(msg.sender!=main) {revert();}
     
     Heroes[hero_slot]=i_Hero;
+    
     Players[hero_slot]=i_Player;
     hero_slot=hero_slot+1;
     
+  }
+
+  function travel_to(address i_Player, uint8 player_hero_id ) public
+  {
+   if(msg.sender!=main) {revert();} //only main contract can import a hero
+   if(tx.origin !=i_Player) {revert();} //no spoofing of player
+   Heroes[hero_slot]= EthStone_Player(i_Player).collection(player_hero_id);
+   hero_statuses[hero_slot]=EthStone_Player(i_Player).hero_status(player_hero_id);
+   hero_slot=hero_slot+1;
   }
   
   function populate(address i_Monster, uint256 monster_slot) public
@@ -463,7 +554,7 @@ function get_random(uint256 bound) internal returns (uint256 result)
    if(tx.origin!=Gods[account]) {revert();}
    //additional checks 
    //check player owns corresponding hero:tbd
-   //HeroContract Hero =HeroContract(hero);
+   //EthStone_Hero Hero =EthStone_Hero(hero);
    EthStone_Map Arena=EthStone_Map(map);
    Arena.travelto_hero(Gods[account], hero);
    
@@ -471,6 +562,15 @@ function get_random(uint256 bound) internal returns (uint256 result)
    
  }
 
+ function travel(uint256 account, address map, uint8 slot) public
+ {
+   if(tx.origin!=Gods[account]) {revert();}
+   EthStone_Map Arena=EthStone_Map(map);
+   Arena.travel_to(Gods[account], slot);
+    
+   
+ }
+ 
  function populate ( address map) public
  {
   EthStone_Map Arena=EthStone_Map(map);
@@ -511,12 +611,12 @@ function add_Monsters(address new_bot) public returns (bool)
  {
     //if(tx.origin!=player)  {return false;}
    // address firsthero=heroes[get_random(heroes.length)];
-   // PlayerContract  player = new PlayerContract(player, firsthero);
+   // EthStone_Player  player = new EthStone_Player(player, firsthero);
     Gods.push(player);//TODO: use mapping instead of list
     //player get a random hero from hero list
     uint256 hero=get_random(heroes.length);   
     address firsthero=heroes[hero];
-    PlayerContract  Cplayer = new PlayerContract(address(this), player, firsthero, Gods.length-1);
+    EthStone_Player  Cplayer = new EthStone_Player(address(this), player, firsthero, Gods.length-1);
     Gods_contracts.push(address(Cplayer));
     return (Gods.length-1, firsthero, address(Cplayer) );
  }
